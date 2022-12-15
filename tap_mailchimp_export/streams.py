@@ -125,10 +125,8 @@ def transform_event(record, campaign, include_sends):
     obj = json.loads(record)
 
     if 'error' in obj.keys():
-        record.close()
         raise Exception(record)
     elif int(obj.get('status', 0)) >= 400:
-        record.close()
         raise Exception(record)
 
     try:
@@ -267,21 +265,26 @@ def run_export_request(ctx, entity, stream, last_updated, retries=0, param_id=No
             with ctx.client.export_post(
                     stream, entity, last_updated, params
             ) as res:
-                if stream in (
-                        IDS.CAMPAIGN_SUBSCRIBER_ACTIVITY,
-                        IDS.AUTOMATION_WORKFLOW_SUBSCRIBER_ACTIVITY):
-                    batched_records = \
-                        handle_subscriber_activity_response(
-                            res, stream, entity, last_updated, include_sends
+                try:
+                    if stream in (
+                            IDS.CAMPAIGN_SUBSCRIBER_ACTIVITY,
+                            IDS.AUTOMATION_WORKFLOW_SUBSCRIBER_ACTIVITY):
+                        batched_records = \
+                            handle_subscriber_activity_response(
+                                res, stream, entity, last_updated, include_sends
+                            )
+                    elif stream in (IDS.LIST_MEMBERS_BY_UPDATE, IDS.LIST_MEMBERS_BY_CREATE):
+                        batched_records = handle_list_members_response(
+                            res, stream, entity, last_updated
                         )
-                elif stream in (IDS.LIST_MEMBERS_BY_UPDATE, IDS.LIST_MEMBERS_BY_CREATE):
-                    batched_records = handle_list_members_response(
-                        res, stream, entity, last_updated
-                    )
 
-                if batched_records:
-                    write_records_and_update_state(
-                        entity, stream, batched_records, last_updated)
+                    if batched_records:
+                        write_records_and_update_state(
+                            entity, stream, batched_records, last_updated)
+                except Exception as e:
+                    res.close()
+
+                    raise e
 
         except Exception as e:
             logger.info(e)
