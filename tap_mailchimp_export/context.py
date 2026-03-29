@@ -45,7 +45,7 @@ class Context(object):
         self._catalog = catalog
         self.selected_stream_ids = set(
             [s.tap_stream_id for s in catalog.streams
-             if s.is_selected()]
+             if s.schema.selected]
         )
 
     def get_bookmark(self, path):
