@@ -9,13 +9,14 @@ setup(
     url="http://singer.io",
     classifiers=["Programming Language :: Python :: 3 :: Only"],
     py_modules=["tap_mailchimp_export"],
+    python_requires=">=3.9",
     install_requires=[
-        "singer-python==5.6.1",
+        "singer-python==6.1.1",
         "mailsnake==1.6.4",
-        'requests==2.18.4',
+        "requests==2.32.3",
         "simplejson==3.11.1",
-        "pendulum==1.2.0",
-        "urllib3==1.22",
+        "pendulum==3.0.0",
+        "backoff==2.2.1",
     ],
     entry_points="""
     [console_scripts]
